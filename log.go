@@ -2,13 +2,17 @@ package rmq
 
 import "golang.org/x/exp/constraints"
 
+// Total space: O(n log n)
+
 type RMQLog[T constraints.Integer | constraints.Float] struct {
 	n   int
 	log []int
+	// O(n log n) memory
 	st  [][]int
 	arr []T
 }
 
+// Preprocessing: O(n log n) time, O(n log n) space
 func NewRMQLog[T constraints.Integer | constraints.Float](arr []T) *RMQLog[T] {
 	n := len(arr)
 	log := make([]int, n+1)
@@ -41,6 +45,7 @@ func NewRMQLog[T constraints.Integer | constraints.Float](arr []T) *RMQLog[T] {
 	return &RMQLog[T]{n: n, log: log, st: st, arr: arr}
 }
 
+// Query time: O(1)
 func (rmq *RMQLog[T]) Query(l, r int) int {
 	if l < 0 || r >= rmq.n || l > r {
 		panic("invalid range")

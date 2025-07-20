@@ -4,24 +4,29 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Total space: O(n log log n)
+
 type RMQHybridLog[T constraints.Integer | constraints.Float] struct {
-	n        int
-	arr      []T
-	stables  []*RMQLog[T]
-	topArr   []T
+	n   int
+	arr []T
+	// O(n/logn * (logn log log n) = n log log n) memory (across all block sparse tables)
+	stables []*RMQLog[T] // we could optimize the log array to be shared across all blocks, but it wouldn't save that much
+	// O(n / log n) memory
+	topArr []T
+	// O(n) memory
 	topST    *RMQLog[T]
 	blockLen int
 }
 
+// Preprocessing: O(n log log n) time, O(n log log n) space
 func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T) *RMQHybridLog[T] {
 	n := len(arr)
 
-	count := 1
-	for (1 << count) <= n {
-		count++
+	blockLen := 1
+	for (1 << blockLen) < n {
+		blockLen++
 	}
 
-	blockLen := count
 	blockCount := (n + blockLen - 1) / blockLen
 	stables := make([]*RMQLog[T], blockCount)
 	topArr := make([]T, blockCount)
@@ -44,6 +49,7 @@ func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T) *RMQHybrid
 	}
 }
 
+// Query time: O(1)
 func (rmq *RMQHybridLog[T]) Query(l, r int) int {
 	if l < 0 || r >= rmq.n || l > r {
 		panic("invalid range")

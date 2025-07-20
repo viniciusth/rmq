@@ -2,6 +2,8 @@ package rmq
 
 import "golang.org/x/exp/constraints"
 
+// Total space: O(n)
+
 type RMQNaive[T constraints.Integer | constraints.Float] struct {
 	n   int
 	arr []T
@@ -14,6 +16,7 @@ func NewRMQNaive[T constraints.Integer | constraints.Float](arr []T) *RMQNaive[T
 	}
 }
 
+// Query time: O(r - l + 1)
 func (rmq *RMQNaive[T]) Query(l, r int) int {
 	if l < 0 || r >= rmq.n || l > r {
 		panic("invalid range")

@@ -4,24 +4,29 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Total space: O(n)
+
 type RMQHybridNaive[T constraints.Integer | constraints.Float] struct {
-	n        int
-	arr      []T
-	stables  []*RMQNaive[T]
-	topArr   []T
+	n   int
+	arr []T
+	// O(n / log n) memory (pointers and structs)
+	stables []*RMQNaive[T]
+	// O(n / log n) memory
+	topArr []T
+	// O(n) memory
 	topST    *RMQLog[T] // This is the RMQLog for the top array
 	blockLen int
 }
 
+// Preprocessing: O(n) time, O(n) space
 func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T) *RMQHybridNaive[T] {
 	n := len(arr)
 
-	count := 1
-	for (1 << count) <= n {
-		count++
+	blockLen := 1
+	for (1 << blockLen) < n {
+		blockLen++
 	}
 
-	blockLen := count
 	blockCount := (n + blockLen - 1) / blockLen
 	stables := make([]*RMQNaive[T], blockCount)
 	topArr := make([]T, blockCount)
@@ -45,6 +50,7 @@ func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T) *RMQH
 	}
 }
 
+// Query time: O(log n)
 func (rmq *RMQHybridNaive[T]) Query(l, r int) int {
 	if l < 0 || r >= rmq.n || l > r {
 		panic("invalid range")
