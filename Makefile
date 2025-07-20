@@ -27,3 +27,11 @@ plot: bench.csv
 clean:
 	rm -f bench.csv
 	rm -rf plots 
+
+fuzz:
+	go test -fuzz=FuzzRMQ -fuzztime=30s
+
+publish:
+	@if [ -z "$(VERSION)" ]; then echo "Set VERSION=<tag> (e.g. make publish VERSION=v0.1.0)"; exit 1; fi
+	git tag $(VERSION)
+	git push origin $(VERSION) 
