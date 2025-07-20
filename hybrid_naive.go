@@ -16,10 +16,12 @@ type RMQHybridNaive[T constraints.Integer | constraints.Float] struct {
 	// O(n) memory
 	topST    *RMQLog[T] // This is the RMQLog for the top array
 	blockLen int
+	// Comparator (a is better than b)
+	less func(T, T) bool
 }
 
 // Preprocessing: O(n) time, O(n) space
-func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T) *RMQHybridNaive[T] {
+func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T, less func(a, b T) bool) *RMQHybridNaive[T] {
 	n := len(arr)
 
 	blockLen := 1
@@ -33,12 +35,12 @@ func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T) *RMQH
 	for i := range blockCount {
 		blockStart := i * blockLen
 		blockEnd := min((i+1)*blockLen, n)
-		stables[i] = NewRMQNaive(arr[blockStart:blockEnd])
+		stables[i] = NewRMQNaive(arr[blockStart:blockEnd], less)
 		topArr[i] = arr[stables[i].Query(0, blockEnd-blockStart-1)+blockStart]
 	}
 
 	// Create the RMQLog for the top array
-	rmqTop := NewRMQLog(topArr)
+	rmqTop := NewRMQLog(topArr, less)
 
 	return &RMQHybridNaive[T]{
 		n:        n,
@@ -47,6 +49,7 @@ func NewRMQHybridNaive[T constraints.Integer | constraints.Float](arr []T) *RMQH
 		topArr:   topArr,
 		topST:    rmqTop,
 		blockLen: blockLen,
+		less:     less,
 	}
 }
 
@@ -71,12 +74,12 @@ func (rmq *RMQHybridNaive[T]) Query(l, r int) int {
 		// If there are middle blocks, we need to query the top RMQLog
 		blockIndex := rmq.topST.Query(leftBlock+1, rightBlock-1)
 		midIndex := rmq.stables[blockIndex].Query(0, rmq.blockLen-1) + (blockIndex * rmq.blockLen)
-		if rmq.arr[midIndex] < rmq.arr[minIndex] {
+		if rmq.less(rmq.arr[midIndex], rmq.arr[minIndex]) {
 			minIndex = midIndex
 		}
 	}
 	rightBlockMinIndex := rmq.stables[rightBlock].Query(0, r%rmq.blockLen) + rightBlock*rmq.blockLen
-	if rmq.arr[rightBlockMinIndex] < rmq.arr[minIndex] {
+	if rmq.less(rmq.arr[rightBlockMinIndex], rmq.arr[minIndex]) {
 		minIndex = rightBlockMinIndex
 	}
 

@@ -10,10 +10,12 @@ type RMQLog[T constraints.Integer | constraints.Float] struct {
 	// O(n log n) memory
 	st  [][]int
 	arr []T
+	// Comparator (a is better than b)
+	less func(T, T) bool
 }
 
 // Preprocessing: O(n log n) time, O(n log n) space
-func NewRMQLog[T constraints.Integer | constraints.Float](arr []T) *RMQLog[T] {
+func NewRMQLog[T constraints.Integer | constraints.Float](arr []T, less func(a, b T) bool) *RMQLog[T] {
 	n := len(arr)
 	log := make([]int, n+1)
 	for i := 2; i <= n; i++ {
@@ -34,7 +36,7 @@ func NewRMQLog[T constraints.Integer | constraints.Float](arr []T) *RMQLog[T] {
 		for i := 0; i+(1<<j) <= n; i++ {
 			idx1 := st[j-1][i]
 			idx2 := st[j-1][i+(1<<(j-1))]
-			if arr[idx1] < arr[idx2] {
+			if less(arr[idx1], arr[idx2]) {
 				st[j][i] = idx1
 			} else {
 				st[j][i] = idx2
@@ -42,7 +44,7 @@ func NewRMQLog[T constraints.Integer | constraints.Float](arr []T) *RMQLog[T] {
 		}
 	}
 
-	return &RMQLog[T]{n: n, log: log, st: st, arr: arr}
+	return &RMQLog[T]{n: n, log: log, st: st, arr: arr, less: less}
 }
 
 // Query time: O(1)
@@ -53,7 +55,7 @@ func (rmq *RMQLog[T]) Query(l, r int) int {
 	j := rmq.log[r-l+1]
 	idx1 := rmq.st[j][l]
 	idx2 := rmq.st[j][r-(1<<j)+1]
-	if rmq.arr[idx1] < rmq.arr[idx2] {
+	if rmq.less(rmq.arr[idx1], rmq.arr[idx2]) {
 		return idx1
 	}
 	return idx2

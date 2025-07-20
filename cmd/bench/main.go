@@ -21,9 +21,9 @@ type algo struct {
 }
 
 var algos = map[string]algo{
-	"log":          {name: "log", new: func(a []int) RMQ { return rmq.NewRMQLog(a) }},
-	"hybrid_log":   {name: "hybrid_log", new: func(a []int) RMQ { return rmq.NewRMQHybrid(a) }},
-	"hybrid_naive": {name: "hybrid_naive", new: func(a []int) RMQ { return rmq.NewRMQHybridNaive(a) }},
+	"log":          {name: "log", new: func(a []int) RMQ { return rmq.NewRMQLog(a, rmq.Min) }},
+	"hybrid_log":   {name: "hybrid_log", new: func(a []int) RMQ { return rmq.NewRMQHybrid(a, rmq.Min) }},
+	"hybrid_naive": {name: "hybrid_naive", new: func(a []int) RMQ { return rmq.NewRMQHybridNaive(a, rmq.Min) }},
 }
 
 type memMonitor struct {
@@ -86,15 +86,6 @@ func measureQuery(rmqq RMQ, queries [][2]int) (time.Duration, uint64, uint64) {
 	runtime.GC()
 	alloc := getCurrentAlloc()
 	return dur, peak, alloc
-}
-
-type stats struct {
-	constructTime  float64
-	constructPeak  uint64
-	constructAlloc uint64
-	queryTime      float64
-	queryPeak      uint64
-	queryAlloc     uint64
 }
 
 func runBenchmark(algo algo, N, Q, runs int) {

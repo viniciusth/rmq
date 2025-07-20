@@ -17,10 +17,15 @@ func FuzzRMQ(f *testing.F) {
 			arr[i] = r.Intn(1000000) // Random values
 		}
 
-		naive := NewRMQNaive(arr)
-		log := NewRMQLog(arr)
-		hybrid := NewRMQHybrid(arr)
-		hybridNaive := NewRMQHybridNaive(arr)
+		testComparator := Min[int]
+		if r.Intn(2) == 1 {
+			testComparator = Max[int]
+		}
+
+		naive := NewRMQNaive(arr, testComparator)
+		log := NewRMQLog(arr, testComparator)
+		hybrid := NewRMQHybrid(arr, testComparator)
+		hybridNaive := NewRMQHybridNaive(arr, testComparator)
 
 		algos := []struct {
 			name string

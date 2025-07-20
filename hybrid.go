@@ -16,10 +16,12 @@ type RMQHybridLog[T constraints.Integer | constraints.Float] struct {
 	// O(n) memory
 	topST    *RMQLog[T]
 	blockLen int
+	// Comparator (a is better than b)
+	less func(T, T) bool
 }
 
 // Preprocessing: O(n log log n) time, O(n log log n) space
-func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T) *RMQHybridLog[T] {
+func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T, less func(a, b T) bool) *RMQHybridLog[T] {
 	n := len(arr)
 
 	blockLen := 1
@@ -33,11 +35,11 @@ func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T) *RMQHybrid
 	for i := range blockCount {
 		blockStart := i * blockLen
 		blockEnd := min((i+1)*blockLen, n)
-		stables[i] = NewRMQLog(arr[blockStart:blockEnd])
+		stables[i] = NewRMQLog(arr[blockStart:blockEnd], less)
 		topArr[i] = arr[stables[i].Query(0, blockEnd-blockStart-1)+blockStart]
 	}
 
-	rmqTop := NewRMQLog(topArr)
+	rmqTop := NewRMQLog(topArr, less)
 
 	return &RMQHybridLog[T]{
 		n:        n,
@@ -46,6 +48,7 @@ func NewRMQHybrid[T constraints.Integer | constraints.Float](arr []T) *RMQHybrid
 		topArr:   topArr,
 		topST:    rmqTop,
 		blockLen: blockLen,
+		less:     less,
 	}
 }
 
@@ -70,12 +73,12 @@ func (rmq *RMQHybridLog[T]) Query(l, r int) int {
 		// If there are middle blocks, we need to query the top RMQLog
 		blockIndex := rmq.topST.Query(leftBlock+1, rightBlock-1)
 		midIndex := rmq.stables[blockIndex].Query(0, rmq.blockLen-1) + (blockIndex * rmq.blockLen)
-		if rmq.arr[midIndex] < rmq.arr[minIndex] {
+		if rmq.less(rmq.arr[midIndex], rmq.arr[minIndex]) {
 			minIndex = midIndex
 		}
 	}
 	rightBlockMinIndex := rmq.stables[rightBlock].Query(0, r%rmq.blockLen) + rightBlock*rmq.blockLen
-	if rmq.arr[rightBlockMinIndex] < rmq.arr[minIndex] {
+	if rmq.less(rmq.arr[rightBlockMinIndex], rmq.arr[minIndex]) {
 		minIndex = rightBlockMinIndex
 	}
 

@@ -7,12 +7,15 @@ import "golang.org/x/exp/constraints"
 type RMQNaive[T constraints.Integer | constraints.Float] struct {
 	n   int
 	arr []T
+	// Comparator (a is better than b)
+	less func(T, T) bool
 }
 
-func NewRMQNaive[T constraints.Integer | constraints.Float](arr []T) *RMQNaive[T] {
+func NewRMQNaive[T constraints.Integer | constraints.Float](arr []T, less func(a, b T) bool) *RMQNaive[T] {
 	return &RMQNaive[T]{
-		n:   len(arr),
-		arr: arr,
+		n:    len(arr),
+		arr:  arr,
+		less: less,
 	}
 }
 
@@ -24,7 +27,7 @@ func (rmq *RMQNaive[T]) Query(l, r int) int {
 
 	minIndex := l
 	for i := l + 1; i <= r; i++ {
-		if rmq.arr[i] < rmq.arr[minIndex] {
+		if rmq.less(rmq.arr[i], rmq.arr[minIndex]) {
 			minIndex = i
 		}
 	}
